@@ -24,6 +24,7 @@ s3 = [];
 s4 = [];
 s5 = [];
 i = 1;
+fs1 = fs * 2;
 for k = 1:2*fs:n
     disp(i);
     s = y(k:min(k+2*fs-1, n));
@@ -41,32 +42,45 @@ for k = 1:2*fs:n
     i = i + 1;
 end
 % disp(length(s5));
-fc = [100000, 300000, 20000, 150000, 250000];
-fs1 = 7000000;
-freqdev = 50000;
+fc = [4000, 4100, 4200, 4300, 4400];
+
+freqdev = 7500;
 time = (0:dt:length(s1)*dt-dt);
 figure(1);
 plot(time, s1);
 ms1 = fmmod(s1, fc(1), fs1, freqdev);
-time = 0:dt:(length(s1)*dt)-dt;
-figure(2);
+% time = 0:dt:(length(s1)*dt)-dt;
+% figure(2);
 % plot(time, ms1);
-ms2 = fmmod(s2, fc(2), fs1, freqdev);
-ms3 = fmmod(s3, fc(3), fs1, freqdev);
-ms4 = fmmod(s4, fc(4), fs1, freqdev);
-ms5 = fmmod(s5, fc(5), fs1, freqdev);
-dms1 = fmdemod(ms1, fc(1), fs1, freqdev);
-figure(3);
+ms2 = modulator(s2, fc(2), fs1, freqdev);
+ms3 = modulator(s3, fc(3), fs1, freqdev);
+ms4 = modulator(s4, fc(4), fs1, freqdev);
+ms5 = modulator(s5, fc(5), fs1, freqdev);
+[dms1, time_1] = demodulator(ms1, fc(1), fs1, freqdev, dt);
+% figure(3);
 % plot(time, dms1);
-dms2 = fmdemod(ms2, fc(2), fs1, freqdev);
-dms3 = fmdemod(ms3, fc(3), fs1, freqdev);
-dms4 = fmdemod(ms4, fc(4), fs1, freqdev);
-dms5 = fmdemod(ms5, fc(5), fs1, freqdev);
+[dms2, time_2] = demodulator(ms2, fc(2), fs1, freqdev, dt);
+[dms3, time_3] = demodulator(ms3, fc(3), fs1, freqdev, dt);
+[dms4, time_4] = demodulator(ms4, fc(4), fs1, freqdev, dt);
+[dms5, time_5] = demodulator(ms5, fc(5), fs1, freqdev, dt);
+
 demod_sig = [dms1' dms2' dms3' dms4' dms5'];
-time = (0:dt:length(y)*dt -dt);
+time = [time_1 time_2 time_3 time_4 time_5];
 figure(4);
 plot(time, demod_sig);
+
 newfile = 'demod.wav';
 audiowrite(newfile,demod_sig, fs);
 y1 = audioread('demod.wav');
 sound(y1, fs);
+
+function [mes1] = modulator(s, fc, fs, freqdev)
+    mes1 = fmmod(s, fc, fs, freqdev);
+end
+
+function [dmes, time] = demodulator(mes, fc, fs, freqdev, dt)
+    dmes = fmdemod(mes, fc, fs, freqdev);
+    dmes = dmes(75:length(dmes) -  75);
+    time = 0:dt:length(dmes)*dt - dt;
+end
+
